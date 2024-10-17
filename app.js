@@ -1,3 +1,6 @@
+var dotenv = require('dotenv');  // Cargar dotenv
+dotenv.config();  // Cargar las variables de entorno desde el archivo .env
+
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
