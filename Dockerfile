@@ -7,10 +7,7 @@ COPY package-lock.json .
 
 RUN npm install
 
-COPY bin/ ./bin
-COPY public ./public
-COPY routes ./routes
-COPY app.js .
+COPY . .
 
 EXPOSE 3000
 

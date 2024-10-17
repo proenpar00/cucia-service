@@ -1,41 +1,44 @@
 var express = require('express');
 var router = express.Router();
+var Image = require('../models/img');
 
-var image = [
-  {"id":1 ,
-    "cells": [
-      {"cell": 1, "classification": "Negative"},
-      {"cell": 2, "classification": "Negative"},
-      {"cell": 3, "classification": "Negative"},
-      {"cell": 4, "classification": "SCH"},
-      {"cell": 5, "classification": "SCH"},
-      {"cell": 6, "classification": "HSIL"},
-      {"cell": 7, "classification": "HSIL"}]
-}
-] 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send(image);
+/* GET image listing. */
+router.get('/', async function(req, res, next) {
+  try{
+    const result = await Image.find();
+    res.send(result.map((c) => c.cleanup()));
+  } catch (e) {
+    res.sendStatus(500);
+  }
+  
 });
 
-/*POST image */
+/*POST image  CREO QUE NO VA A TENER NINGÚN POST
 router.post('/', function(req, res, next) {
+  
   var newImage = req.body;
   image.push(newImage);
   res.sendStatus(201);
-})
+})*/
 
 /*GET image/id */
-router.get('/:id', function(req, res, next) {
-  var id = req.params.id;
-  var result = image.find(c => {
-    return c.id == id;
-  })
-  if (result){
-    res.send(result);
-  } else {
-    res.sendStatus(404);
+router.get('/:id', async function(req, res, next) {
+  const id = req.params.id;
+
+  try {
+    const foundImg = await Image.findOne({ id });
+
+    if (foundImg) {
+      res.status(200).send(foundImg.map((c) => c.cleanup()));
+    } else {
+      res.status(404).send("Imagen no encontrado");
+    }
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
   }
-})
+});
+
+
 module.exports = router;
  
