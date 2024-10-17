@@ -23,12 +23,19 @@ app.use('/api/v1/image', imageRouter);
 //setup connection to mongo
 const mongoose = require('mongoose');
 const DB_URL = process.env.MONGODB_URI || 'mongodb://localhost/test';
-console.log("Conectando a la base de datos: %s", DB_URL)
+console.log("Conectando a la base de datos: %s", DB_URL);
 
 mongoose.connect(DB_URL);
 const db = mongoose.connection;
 
 //recover from errors
 db.on('error', console.error.bind(console, 'db connection error'));
+
+// Crear la carpeta uploads si no existe
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)){
+    fs.mkdirSync(uploadsDir);
+}
 
 module.exports = app;

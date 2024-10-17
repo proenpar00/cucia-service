@@ -6,6 +6,10 @@ const imgSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
+    base64: {
+        type: String,
+        required: true
+    },
     cells: [{
         cell: {
             type: Number,
@@ -21,12 +25,13 @@ const imgSchema = new mongoose.Schema({
 imgSchema.methods.cleanup = function() {
     return {
         id: this.id,
+        base64: this.base64, // Añadido
         cells: this.cells.map(c => ({
             cell: c.cell,
             classification: c.classification
         }))
-        }
-    }
+    };
+}
 
 const Image = mongoose.model('Image', imgSchema);
 
