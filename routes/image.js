@@ -1,47 +1,4 @@
-/*var express = require('express');
-var router = express.Router();
-var Image = require('../models/img');*/
 
-/* GET image listing. 
-router.get('/', async function(req, res, next) {
-  try{
-    const result = await Image.find();
-    res.send(result.map((c) => c.cleanup()));
-  } catch (e) {
-    res.sendStatus(500);
-  }
-  
-});*/
-
-/*POST image  CREO QUE NO VA A TENER NINGÚN POST
-router.post('/', function(req, res, next) {
-  
-  var newImage = req.body;
-  image.push(newImage);
-  res.sendStatus(201);
-})
-
-/*GET image/id 
-router.get('/:id', async function(req, res, next) {
-  const id = req.params.id;
-
-  try {
-    const foundImg = await Image.findOne({ id });
-
-    if (foundImg) {
-      res.status(200).send(foundImg.map((c) => c.cleanup()));
-    } else {
-      res.status(404).send("Imagen no encontrado");
-    }
-  } catch (error) {
-    console.error(error);
-    res.sendStatus(500);
-  }
-});
-
-
-module.exports = router;*/
- 
 var express = require('express');
 var router = express.Router();
 var Image = require('../models/img');
@@ -75,7 +32,7 @@ const upload = multer({
   }
 });
 
-// Ruta para subir la imagen y procesarla
+/*POST image */
 router.post('/', upload.single('image'), async function(req, res, next) {
     const imagePath = path.join(__dirname, '../uploads', req.file.filename);
     const weightsPath = path.join(__dirname, '../yolov5/best.pt');  // Ruta absoluta a best.pt
@@ -97,12 +54,11 @@ router.post('/', upload.single('image'), async function(req, res, next) {
 
         // Capturar la salida en base64
         const imgBase64 = stdout.trim(); // La salida del script en base64
-        console.log(imgBase64);
+        //console.log(imgBase64);
         // Crear un nuevo registro en la base de datos
         const newImage = new Image({
             id: Date.now(), // O cualquier lógica para el ID que estés utilizando
             base64: imgBase64,
-            cells: [] // Puedes llenar esto según sea necesario
         });
 
         try {
@@ -114,5 +70,29 @@ router.post('/', upload.single('image'), async function(req, res, next) {
         }
     });
 });
+
+// GET image by ID
+router.get('/:id', async function(req, res, next) {
+  const id = req.params.id;
+
+  try {
+    // Buscar la imagen por ID en la base de datos
+    const foundImg = await Image.findOne({ id });
+
+    if (foundImg) {
+      // Devolver la imagen en formato base64
+      res.status(200).json({
+        id: foundImg.id,
+        base64: foundImg.base64,
+      });
+    } else {
+      res.status(404).send("Imagen no encontrada");
+    }
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
+
 
 module.exports = router;

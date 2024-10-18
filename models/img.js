@@ -9,27 +9,13 @@ const imgSchema = new mongoose.Schema({
     base64: {
         type: String,
         required: true
-    },
-    cells: [{
-        cell: {
-            type: Number,
-            required: true
-        },
-        classification: {
-            type: String,
-            required: true
-        }
-    }]
+    }
 });
 
 imgSchema.methods.cleanup = function() {
     return {
         id: this.id,
         base64: this.base64, // Añadido
-        cells: this.cells.map(c => ({
-            cell: c.cell,
-            classification: c.classification
-        }))
     };
 }
 
