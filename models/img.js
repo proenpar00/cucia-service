@@ -15,7 +15,7 @@ const imgSchema = new mongoose.Schema({
 imgSchema.methods.cleanup = function() {
     return {
         id: this.id,
-        base64: this.base64, // Añadido
+        base64: this.base64, 
     };
 }
 
