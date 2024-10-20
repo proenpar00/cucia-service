@@ -63,7 +63,7 @@ router.post('/', upload.single('image'), async function(req, res, next) {
 
         try {
             await newImage.save(); // Guardar en MongoDB
-            res.status(201).json(newImage.cleanup()); // Enviar respuesta con el objeto creado
+            res.status(201).json({ id: newImage.id, base64: imgBase64 }); // Enviar respuesta con el objeto creado
         } catch (err) {
             console.error(err);
             res.status(500).send('Error saving image to database.');
