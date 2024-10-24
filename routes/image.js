@@ -1,4 +1,3 @@
-
 var express = require('express');
 var router = express.Router();
 var Image = require('../models/img');
@@ -20,7 +19,6 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // Limitar tamaño a 5 MB
   fileFilter: (req, file, cb) => {
-    // Aceptar solo ciertos tipos de archivos, si es necesario
     const allowedTypes = /jpeg|jpg|png|gif/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
@@ -32,7 +30,7 @@ const upload = multer({
   }
 });
 
-/*POST image */
+/* POST image */
 router.post('/', upload.single('image'), async function(req, res, next) {
     const imagePath = path.join(__dirname, '../uploads', req.file.filename);
     const weightsPath = path.join(__dirname, '../yolov5/best.pt');  // Ruta absoluta a best.pt
@@ -40,30 +38,32 @@ router.post('/', upload.single('image'), async function(req, res, next) {
     if (!req.file) {
       return res.status(400).send({ message: 'No se ha subido ningún archivo' });
     }
-    // Ejecutar el script de Python
 
-      exec(`python3 ${path.join(__dirname, '../yolov5/process_image.py')} --weights ${weightsPath} --img 1024 --source ${imagePath}`,
-      {
+    // Ejecutar el script de Python
+    exec(`python3 ${path.join(__dirname, '../yolov5/process_image.py')} --weights ${weightsPath} --img 1024 --source ${imagePath}`,
+    {
         maxBuffer: 1024 * 1024 * 10 // Aumenta el tamaño del buffer a 10 MB
-    } 
-      , async (error, stdout, stderr) => {
+    }, async (error, stdout, stderr) => {
         if (error) {
             console.error(`Error executing script: ${error}`);
             return res.status(500).send('Error processing image.');
         }
 
-        // Capturar la salida en base64
-        const imgBase64 = stdout.trim(); // La salida del script en base64
-        //console.log(imgBase64);
+        // Capturar la salida en JSON desde el script Python
+        const result = JSON.parse(stdout.trim());
+        const imgBase64 = result.image_base64;  // Imagen en base64
+        const detections = result.detections;   // Detecciones (clases y confidencias)
+
         // Crear un nuevo registro en la base de datos
         const newImage = new Image({
             id: Date.now(), // O cualquier lógica para el ID que estés utilizando
             base64: imgBase64,
+            detections: detections // Guardar las detecciones en MongoDB
         });
 
         try {
             await newImage.save(); // Guardar en MongoDB
-            res.status(201).json({ id: newImage.id, base64: imgBase64 }); // Enviar respuesta con el objeto creado
+            res.status(201).json({ id: newImage.id, base64: imgBase64, detections: detections }); // Enviar respuesta con la imagen y detecciones
         } catch (err) {
             console.error(err);
             res.status(500).send('Error saving image to database.');
@@ -80,10 +80,11 @@ router.get('/:id', async function(req, res, next) {
     const foundImg = await Image.findOne({ id });
 
     if (foundImg) {
-      // Devolver la imagen en formato base64
+      // Devolver la imagen en formato base64 y las detecciones
       res.status(200).json({
         id: foundImg.id,
         base64: foundImg.base64,
+        detections: foundImg.detections // Enviar las detecciones junto con la imagen
       });
     } else {
       res.status(404).send("Imagen no encontrada");
@@ -93,6 +94,5 @@ router.get('/:id', async function(req, res, next) {
     res.sendStatus(500);
   }
 });
-
 
 module.exports = router;
